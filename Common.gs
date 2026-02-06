@@ -1,18 +1,108 @@
 // セルが非空ならTrue（数値0も非空）
+// 空欄or半角数字が大半、という前提でtrim()を避ける高速版
 function isNonEmpty(v) {
-  if (v === null || v === undefined) return false;
-  if (typeof v === 'number') return true;
-  return String(v).trim() !== "";
+  // 最頻出の空
+  if (v === "" || v === null || v === undefined) return false;
+
+  // 数値は0を含めて非空
+  if (typeof v === "number") return true;
+
+  // 文字列（多分ここがメイン）
+  if (typeof v === "string") {
+    // 1文字でも「空白でない」文字があれば非空
+    // 空白判定はASCII<=32（スペース, タブ, 改行など）
+    for (var i = 0; i < v.length; i++) {
+      if (v.charCodeAt(i) > 32) return true;
+    }
+    return false;
+  }
+
+  // その他（boolean, Dateなど）も許容しつつ判定（ユーザビリティ維持）
+  var s = String(v);
+  for (var j = 0; j < s.length; j++) {
+    if (s.charCodeAt(j) > 32) return true;
+  }
+  return false;
 }
 
 // セルが「0または空欄」ならTrue
+// 空欄or半角数字が大半、という前提でtrim()/Number()を避ける高速版
 function isZeroOrBlank(v) {
-  if (v === null || v === undefined) return true;
-  if (typeof v === 'number') return v === 0;
-  var s = String(v).trim();
-  if (s === "") return true;
-  var n = Number(s);
-  return !isNaN(n) && n === 0;
+  // 最頻出の空
+  if (v === "" || v === null || v === undefined) return true;
+
+  // 数値は0のみTrue
+  if (typeof v === "number") return v === 0;
+
+  // 文字列（多分ここがメイン）
+  if (typeof v === "string") {
+    var s = v;
+    var n = s.length;
+    if (n === 0) return true;
+
+    // 先頭末尾の空白を「インデックス」でスキップ（trim()しない）
+    var a = 0, b = n - 1;
+    while (a <= b && s.charCodeAt(a) <= 32) a++;
+    while (a <= b && s.charCodeAt(b) <= 32) b--;
+
+    // 空白だけだった
+    if (a > b) return true;
+
+    // トリム後が「半角数字のみ」かをチェックしつつ、
+    // 全部'0'ならゼロ、どこかに'1'~'9'があれば非ゼロ
+    var allZero = true;
+    for (var i = a; i <= b; i++) {
+      var code = s.charCodeAt(i);
+      if (code < 48 || code > 57) { // '0'~'9'以外が混ざる
+        allZero = null; // 数字専用ルートを諦める印
+        break;
+      }
+      if (code !== 48) allZero = false; // '0'以外があれば非ゼロ
+    }
+    if (allZero !== null) return allZero; // 数字のみならここで確定（高速）
+
+    // ここから先はレアケース：小数/記号/文字などが混ざる
+    // ユーザビリティのため従来通り「数値化できて0ならゼロ扱い」
+    var t = (a === 0 && b === n - 1) ? s : s.substring(a, b + 1);
+    var num = Number(t);
+    return !isNaN(num) && num === 0;
+  }
+
+  // その他型も許容（ユーザビリティ維持）
+  var str = String(v);
+  // 空白だけならblank
+  var A = 0, B = str.length - 1;
+  while (A <= B && str.charCodeAt(A) <= 32) A++;
+  while (A <= B && str.charCodeAt(B) <= 32) B--;
+  if (A > B) return true;
+
+  // 数値化して0ならゼロ扱い
+  var tt = (A === 0 && B === str.length - 1) ? str : str.substring(A, B + 1);
+  var nn = Number(tt);
+  return !isNaN(nn) && nn === 0;
+}
+
+
+// 「範囲内でどこか1つでも非空がある最後の列のインデックス」（0始まり）を返す
+// 非空セルが存在しなければ -1
+function lastNonEmptyColIdx(data) {
+  var numRows = data.length;
+  var numCols = data[0] ? data[0].length : 0;
+  if (numRows === 0 || numCols === 0) return -1;
+
+  var lastCol = -1;
+
+  // 途中に全空列があっても許容するため、最後まで走査する（breakしない）
+  for (var c = 0; c < numCols; c++) {
+    for (var r = 0; r < numRows; r++) {
+      if (isNonEmpty(data[r][c])) {
+        lastCol = c;   // この列に非空があるので更新
+        break;         // 次の列へ（列内はこれ以上見ない）
+      }
+    }
+  }
+
+  return lastCol;
 }
 
 /**

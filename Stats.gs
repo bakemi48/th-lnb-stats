@@ -18,7 +18,7 @@ function NN_STREAK_COUNT(inputRange, k, l) {
   if (e >= R) e = R - 1;
   if (s > e) return 0;
 
-  var lastCol = lastNonEmptyColIdx_contiguous(data);
+  var lastCol = lastNonEmptyColIdx(data);
   if (lastCol === -1) return 0;
 
   var lastIdx = lastNonEmptyRowIdxPerCol_uptoLastCol(data, lastCol);

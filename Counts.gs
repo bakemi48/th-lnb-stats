@@ -8,7 +8,7 @@ function ATTEMPT_COUNT(inputRange) {
   var C = data[0] ? data[0].length : 0;
   if (R === 0 || C === 0) return [];
 
-  var lastCol = lastNonEmptyColIdx_contiguous(data);
+  var lastCol = lastNonEmptyColIdx(data);
   if (lastCol === -1) {
     // 全空：R行ぶん0
     var z = [];
@@ -38,7 +38,7 @@ function ATTEMPT_COUNT(inputRange) {
 
 /**
  * 突破回数（行ごと）を縦スピルで返す
- * 平均最小化：列→行で到達範囲だけ走査（総セル数 = Σ(lastIdx+1)）
+ * 平均最小化：列→行で到達範囲だけ走査（総セル数=Σ(lastIdx+1)）
  */
 function CLEAR_COUNT(inputRange) {
   var data = inputRange;
@@ -46,7 +46,7 @@ function CLEAR_COUNT(inputRange) {
   var C = data[0] ? data[0].length : 0;
   if (R === 0 || C === 0) return [];
 
-  var lastCol = lastNonEmptyColIdx_contiguous(data);
+  var lastCol = lastNonEmptyColIdx(data);
   if (lastCol === -1) {
     var z = [];
     for (var i = 0; i < R; i++) z.push([0]);
