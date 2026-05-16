@@ -152,3 +152,48 @@ function lastNonEmptyRowIdxPerCol_uptoLastCol(data, lastCol) {
   }
   return out;
 }
+
+/**
+ * 数値化できる値は数値にし、空欄は0として扱う
+ */
+function toNumberOrZero_(v) {
+  if (v === "" || v === null || v === undefined) return 0;
+
+  if (typeof v === "number") {
+    return isNaN(v) ? 0 : v;
+  }
+
+  var s = String(v).trim();
+  if (s === "") return 0;
+
+  var n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+/**
+ * 縦スピル結果 out に、追加列 addRange の値を行ごとに加算する
+ * addRange は inputRange と同じ高さの1列を想定
+ */
+function addExtraColumn_(out, addRange, R) {
+  // 第2引数なしなら何もしない
+  if (addRange === undefined) return out;
+
+  // 1セルだけ渡された場合
+  if (!Array.isArray(addRange)) {
+    if (R !== 1) {
+      throw new Error("追加列の高さが inputRange と一致していません。");
+    }
+    out[0][0] += toNumberOrZero_(addRange);
+    return out;
+  }
+
+  if (addRange.length !== R) {
+    throw new Error("追加列の高さが inputRange と一致していません。");
+  }
+
+  for (var r = 0; r < R; r++) {
+    out[r][0] += toNumberOrZero_(addRange[r][0]);
+  }
+
+  return out;
+}

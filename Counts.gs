@@ -1,8 +1,8 @@
 /**
  * 突入回数（行ごと）を縦スピルで返す
- * 平均最小化：lastColは連続列前提で早期停止、集計はヒストグラムでO(R+L)
+ * 第2引数 addRange があれば、その列の値を最終結果に加算する
  */
-function ATTEMPT_COUNT(inputRange) {
+function ATTEMPT_COUNT(inputRange, addRange) {
   var data = inputRange;
   var R = data.length;
   var C = data[0] ? data[0].length : 0;
@@ -13,7 +13,7 @@ function ATTEMPT_COUNT(inputRange) {
     // 全空：R行ぶん0
     var z = [];
     for (var i = 0; i < R; i++) z.push([0]);
-    return z;
+    return addExtraColumn_(z, addRange, R);
   }
 
   var lastIdx = lastNonEmptyRowIdxPerCol_uptoLastCol(data, lastCol);
@@ -32,15 +32,16 @@ function ATTEMPT_COUNT(inputRange) {
     running += freq[r];
     out[r] = [running];
   }
-  return out;
+
+  return addExtraColumn_(out, addRange, R);
 }
 
 
 /**
  * 突破回数（行ごと）を縦スピルで返す
- * 平均最小化：列→行で到達範囲だけ走査（総セル数=Σ(lastIdx+1)）
+ * 第2引数 addRange があれば、その列の値を最終結果に加算する
  */
-function CLEAR_COUNT(inputRange) {
+function CLEAR_COUNT(inputRange, addRange) {
   var data = inputRange;
   var R = data.length;
   var C = data[0] ? data[0].length : 0;
@@ -50,7 +51,7 @@ function CLEAR_COUNT(inputRange) {
   if (lastCol === -1) {
     var z = [];
     for (var i = 0; i < R; i++) z.push([0]);
-    return z;
+    return addExtraColumn_(z, addRange, R);
   }
 
   var lastIdx = lastNonEmptyRowIdxPerCol_uptoLastCol(data, lastCol);
@@ -70,5 +71,6 @@ function CLEAR_COUNT(inputRange) {
   // 縦ベクトルへ
   var out = [];
   for (var r2 = 0; r2 < R; r2++) out.push([rowSum[r2]]);
-  return out;
+
+  return addExtraColumn_(out, addRange, R);
 }
